@@ -1,0 +1,146 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+<head>
+  <meta http-equiv="content-type" content="text/html; charset=utf-8" />
+  <title>Getfile 1.4 Documentation</title>
+
+<style type="text/css">
+@media screen
+{
+body { font: .9em "Trebuchet MS", Arial, Sans-Serif; margin: 0px; }
+h1,h2 { margin: 0 0 2px 0; font-size: 2em; }
+h1 sup { font-size: .6em; }
+h3 { margin: 0 0 2px 0; font-size: 1.5em; }
+hr { display: none; }
+a { color: #036DA7; background: inherit; }
+li { margin-top: 15px; }
+code { font: 1em "Courier New", Courier, monospace; padding: 0.5em; background-color: #ddd; margin: 1px; display: block; }
+em {text-decoration: underline;}
+#wrap { width: 90%; margin: 30px auto; }
+
+.printonly { display: none; }
+.readme { background: #FFFED1; padding: 15px; border: 2px solid #E5E4A0; margin: 10px 15px 0 15px; color: #4B4000; }
+.header { background: #E8F0FF; padding: 15px; border: 2px solid #4C6199; margin: 10px 15px 0 15px; color: #4C6199; overflow:hidden; cursor:pointer; }
+.content{ background: #fff; margin: 0 20px 0 20px; color: #4B4000; border-bottom: 1px solid #A5D5E7; border-left: 1px solid #A5D5E7; border-right: 1px solid #A5D5E7; overflow:hidden; position:relative; padding:10px 5px 5px 5px; }
+}
+
+@media print
+{
+.content { display: block !important; margin: 0 20px 40px 20px; }
+.printonly { font: 1em "Courier New", Courier, monospace; }
+code { font: 1em "Courier New", Courier, monospace; padding: 0.5em; margin: 1px; display: block; }
+a { color: #036DA7; background: inherit; }
+}
+</style>
+<script type="text/javascript">
+function toggle(a){if(document.getElementById(a).style.display==''){document.getElementById(a).style.display='none';return}document.getElementById(a).style.display=''}
+</script>
+</head>
+<body onload="toggle('d1');toggle('d2');toggle('d3');">
+
+<div class="readme">
+    <a name="header"></a>
+		<h1><a href="http://gowondesigns.com"><img style="vertical-align: middle;" alt="Getfile" src="data:image/gif;base64,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" /></a>
+    Getfile<sup>1.4</sup> Documentation</h1>
+		<p>Welcome to <a href="http://www.gowondesigns.com/">Getfile</a> - a single file, <a href="http://www.php.net/">PHP</a> powered download handler and logging script with hotlink protection.</p>
+		<p><b>You will need <a href="http://www.php.net/">PHP</a>: Hypertext Preprocessor version 4.x or above</b> installed on your server in order to use this script.</p>
+		<p>To view directions for each step, click on the headers. <b>Please review every section.</b></p>
+
+</div>
+
+<div class="header" title="Setting up Getfile to work on your site" onclick="toggle('d1')"><h1>Configuration</h1></div>
+
+
+<div class="content" id="d1">
+<p>Upload download.php to your server. To configure Getfile to work for your site, you must <b>first open the file and edit the settings</b> on the first half of the page.</p>
+
+<ul>
+<li><code>define('BASE_DIR','/www/user/downloads/');</code> tells the script where your downloads are located on the server. This location is different from the URL of the website. You can insert the absolute path of the folder (the location from the root directory) or the relative path of the download folder from the script.
+<p>For example: download.php is located in the <b>/www/user</b> folder, with the download folder being <b>/www/user/downloads</b>. For the BASE_DIR, you can set either <b>"/www/user/downloads/"</b> or <b>"downloads/"</b> (relative paths do not begin with a slash). <b>Note:</b> All paths must end with a trailing slash. ("/www/user/downloads/" instead of "/www/user/downloads") </p>
+<p>You can also use the absolute path to link to a folder not accessible by the web. For example, if <b>/www/user/</b> is the web-accessible folder on your server, you can make <b>"/downloads/"</b>the <b>BASE_DIR</b>, and because it is not in the "/www/" or "/www/user/" folders, no one will be able to directly link/view your files or download folder.</p>
+</li>
+<li><code>define('ENCRYPT_FILENAME',TRUE);</code>enables the use of encrypted filenames in the query.</li>
+<li><code>define('HOTLINK_PROTECTION',TRUE);</code> tells the script whether or not to enable the hotlink protection. You can set this to <b>TRUE</b> or <b>FALSE</b> to turn it on and off.</li>
+<li><code>define('HOTLINK_PAGE_URL','http://www.mysite.com');</code> sets the page that the script redirects to whenever hotlinking is detected. You can set it to a warning page letting the user know of the violation, or simply redirect the download to the proper page where they can get the information from your site.</li>
+<li><code>$allowed_domains="*.mysite.com, www.myaffiliate.net";</code> sets the domains that are allowed to link to your downloads when hotlink protection is on. The asterisk (*) is used as a wilcard. This makes completely allowing domains easier. Simply adding "www.somesite.com" won't allow "forum.somesite.com" to link to your downloads. To make sure "forum.somesite.com" and any other subdomains from the site will work, add an asterisk where "www" would go ("*.somesite.com") to completely allow www.somesite.com to link to your download.</li>
+<li><code>define('LOG_DOWNLOADS',TRUE);</code> tells the script whether or not to log the downloads. You can set this to <b>TRUE</b> or <b>FALSE</b> to turn it on and off.</li>
+<li><code>define('LOG_FILE','downloads.txt');</code> tells the script the name of the file that will hold the logs. The name does not matter, and when the first log is made the file will automatically be created by the script.</li>
+<li><code>define('LOG_LIST_NUM',200);</code> sets the maximum number of items shown in the log view. When the log exceeds this number, it displays the most recent ## of logs.</li>
+<li><code>define('USERNAME','admin');</code> is the username used to manage the download log through the script.</li>
+<li><code>define('PASSWORD','pass');</code> is the password used to manage the download log through the script.</li>
+<li><code>define('LOG_CSS','&lt;CSS Code&gt;');</code> is the embedded CSS stylesheet to format the log page. Be careful that the code you insert here doesn't break the script and cause it to work improperly.</li>
+<li><code>$allowed_ext = array (<br />
+  // archives<br />
+  'zip' => 'application/zip',</code> and the following lines make up the list of extensions that are allowed through the script. You can add or delete extensions to make the script only usable for certain files.
+  <p>To add an extension, you must add a line into this section in the following format: <code>'extension' => 'mime type',</code></p>
+  <p>If you are trying to add an extension and do not know the mime type, you can try and search for the mime type of your extension (try <a href="http://www.w3schools.com/media/media_mimeref.asp">http://www.w3schools.com/media/media_mimeref.asp</a>). If you cannot find the mime type for the extension you wish to add, simply leave it blank:
+  <code>$allowed_ext = array (<br />
+  // archives<br />
+  'zip' => 'application/zip',<br />'doc' => 'application/msword',  //found mime type for .doc extensions<br />'ogg' => '',  // The mime type is unknown, so left blank</code></p>
+  <p>NOTE: Don't forget the comma at the end of your mime type.</p></li>
+</ul>
+
+</div>
+
+
+<div class="header" title="Understanding and using Getfile's features" onclick="toggle('d2')"><h1>Using Getfile</h1></div>
+<div class="content" id="d2">
+<h2>Understanding Hotlinking and Bandwidth Theft</h1>
+<p>"Hotlinking" (also called "leeching" and "bandwidth theft") is a term referring to when a web page of one website owner is direct linking to the images or other multimedia files on the web host of another website owner, usually without permission.  This not only causes the host of the hotlinked file to use his bandwidth for data tranfers occuring on another's site, but often in many cases it is intellectual property theft. With <b>Hotlink Protection</b> turned on, you can block out all unwanted domains. Only the people in your allowed-domains list will be able to have access to the files in your download folder.<p />
+
+<h2>Organizing Downloads on Your Site</h2>
+<p>For Getfile to serve the downloads on your site, they need to be <b>uniquely named</b> and <b>located in the downloads folder</b> that you set when you configured the script. Even though all of your download files need to be located in the downloads folder, they can still be organized within that folder. For Example, the downloads folder is set to "downloads/", but the folder is organized like so:</p>
+<code>downloads/reports/2007/<br />
+downloads/reports/2006/<br />
+downloads/programs/games/<br />
+downloads/programs/office/<br />
+downloads/forms/</code>
+<p>Even though your files are in subfolders, as long as they are in your download folder and are uniquely named they can be located by the script with no extra effort. So even though "project_report.doc" is in the "downloads/reports/2007/" folder, when you link to the download "download.php?progress_report.doc", the script will still find your document.</p>
+<p><b>NOTE: In order for Getfile to serve your files properly, they all <em>NEED</em> to be uniquely named</b> from all files in the downloads folder, including subfolders. If more than one file has the same name, Getfile will serve the first file that fits, which may not be the desired file. For example, if you have two files named "progress_report.doc" in "downloads/reports/2006/" and "downloads/reports/2007/", and "project_report.doc" is in the "downloads/reports/2007/" folder, when you link to the download "download.php?progress_report.doc" is meant to fetch the report in the 2007 folder, if the the 2006 folder is checked first, that is the file that'll reach the user when they download it. To avoid this and make the process simple, simply add dates into the names of the files (like "progress_report0206.doc"). You can even still have the user download the file as "progress_report.doc" regardless with Getfile's <em>Download As New Name</em> feature.</p>
+
+<h2>Download File</h2>
+<p>To use the script to put a download on your website, simply add a link onto your website:</p>
+<p><code>&lt;a href="http://www.yourdomain.com/download.php?example.zip"&gt;Download example.zip&lt;/a&gt;</code></p>
+
+<h3>Using Encrypted Filenames</h3>
+<p>When <strong>ENCRYPT_FILENAME</strong> is enabled, you can use MD5 encrypted names in your URLs to retrieve files. This is useful when you want to disguise the original name of the file you're delivering. While in the admin panel, with <strong>ENCRYPT_FILENAME</strong> enabled, there is a built in tool to help you encrypt the desired filename. Rather than using:</p>
+<p><code>&lt;a href="http://www.yourdomain.com/download.php?example.zip"&gt;Download example.zip&lt;/a&gt;</code></p>
+<p>Your URL will be:</p>
+<p><code>&lt;a href="http://www.yourdomain.com/download.php?9ae68719184d087ebd6c4e6f6a8ae51a"&gt;Download example.zip&lt;/a&gt;</code></p>
+
+<h2>Download File as New Name</h2>
+<p>You can use the script to force the user to download a file under a new name without renaming the original file. Create a link like the one above, add a slash ( "/" ), and then type the new name of the file:</p>
+<code>&lt;a href="http://www.yourdomain.com/download.php?example.zip/newname.zip"&gt;Download newname.zip&lt;/a&gt;<br />
+&lt;a href="http://www.yourdomain.com/download.php?9ae68719184d087ebd6c4e6f6a8ae51a/newname.zip"&gt;Download newname.zip&lt;/a&gt;</code>
+<p>When the user clicks on the link, s/he will download <b>newname.zip</b>, but the file will still be <b>example.zip</b>.</p>
+</div>
+
+
+<div class="header" title="Understanding and using Getfile's features" onclick="toggle('d3')"><h1>Managing the Download Log</h1></div>
+<div class="content" id="d3">
+<h2>Checking the Log Through the Web</h2>
+<p>When you enable <b>LOG_DOWNLOADS</b>, all downloads processed by Getfile are logged into tab-delimited text file. You can view the log online through Getfile. Simply type this URL into your browser:</p>
+<code>http://www.yourdomain.com/download.php?admin</code>
+<p>For the greatest level of security, Getfile uses HTTP authentication to protect the panel. The username and password are the ones you configured into the script. In this view, the data is organized neatly into an HTML table. From this view, you can also export and clear the log with the <b>Export Log</b> and <b>Clear Log</b> buttons at the top of the page. NOTE: Clearing the log deletes the logged data off the server, not just the page. You cannot recover your log data after you've cleared it.</p>
+
+
+<h2>Viewing the Exported Log Data</h2>
+<p>Since the data is exported to a tab-delimited text file, the log can be viewed in an ASCII editor or word processor like Notepad, Wordpad, and Microsoft Word. The file is also supported by most spreadsheet programs like Excel. To import while using Excel, click <b>File > Open...</b>, <b>change File Type to Text Files</b>, and select your data log. A wizard will come up with alot of options, but Excel will intuitively know how to read the data. Simply press Finish on the wizard and your data will be put in it's correct cells for you to use with your documents, statistics, and presentations.</p>
+
+<h2>Customizing Download Log in Web View</h2>
+<p>You can customize the way your log data is presented while viewing it on the web by modifying the code in the <b>LOG_CSS</b> portion of the script. You can change the way the <b>BODY, THEAD, TABLE, TR</b>, and <b>TD</b> and selectors work. The CSS code included shows all of the tags used in the log view, and you can easily customize the look of the log to your liking. If you need help on figuring out what CSS is and how to use it, take a look at some CSS Tutorials at <a href="http://www.w3schools.com/css/css_intro.asp">http://www.w3schools.com/css/css_intro.asp</a>.</p>
+</div>
+
+
+<div class="header" title="Additional Info" onclick="toggle('footer')"><h1>Additional Info</h1></div>
+<div class="content" id="footer">
+			Bug reports, suggestions, comments, questions:<br /><a href="http://www.gowondesigns.com/">Gowon Designs</a>
+			<p><a href="#header">Getfile Documentation</a>, edited by <a href="http://www.gowondesigns.com/">Gowon Patterson</a><span class="printonly"> ( http://www.gowondesigns.com/ )</span>.</p>
+			<p><a href="http://www.gowondesigns.com/">Getfile</a> is licensed under the <a href="http://www.opensource.org/licenses/osl-3.0.php">Open Software License 3.0</a>.<br />
+			<a href="#header">Getfile Documentation</a> is licensed under the <a rel="license" href="http://creativecommons.org/licenses/by-nc-sa/3.0/us/">Creative Commons Attribution-Noncommercial-Share Alike 3.0 United States License</a><span class="printonly"> ( http://www.opensource.org/licenses/osl-3.0.php )</span>.<br />
+			Copyright &copy; 2007-10, <a href="http://www.gowondesigns.com/">Gowon Designs</a></p>
+</div>
+<div class="spacer">&nbsp;</div>
+
+</body>
+</html>
