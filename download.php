@@ -12,7 +12,6 @@ namespace Getter;
 
 class Configuration {
     const BASE_DIRECTORY = '/www/user/downloads/';
-    const ENCRYPT_FILENAME = true;
     const HOTLINK_PROTECTION = true;
     const HOTLINK_REDIRECT_URL = null; // if set to null, will simply generate 403 Forbidden Error.
 
@@ -24,7 +23,6 @@ class Configuration {
     const PANEL_ITEMS_MAX_NUM = 200;
     const PANEL_USERNAME = 'admin';
     const PANEL_PASSWORD = 'root';
-
     const PANEL_CSS = <<< CSS
 body { background-color: #fff; color: #000; font-family: "Trebuchet MS", sans-serif; }
 table { width: 100%; color: #212424; margin: 0 0 1em 0; font: 80%/150% "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Lucida, Helvetica, sans-serif; }
@@ -163,7 +161,7 @@ class Base {
         header('Content-Disposition: attachment; filename="' . (empty($uri[1]) ? $file : $uri[1]) . '"');
         header('Content-Transfer-Encoding: binary');
         header('Content-Length: ' . $size);
-        //ob_end_flush();
+        ob_end_flush();
         readfile($path);
     }
 
@@ -201,76 +199,72 @@ class Base {
     <meta charset="utf-8">
     <title>Getter Control Panel</title>
     <script type="text/javascript">
-    function sortableTable(tableIDx,intDef,sortProps){
+    function SortableTable(tableIDx,intDef,sortProps){
 
-  var tableID = tableIDx;
-  var intCol = 0;
-  var intDir = -1;
-  var strMethod;
-  var arrHead = null;
-  var arrMethods = sortProps.split(",");
+        var tableID = tableIDx;
+        var intCol = 0;
+        var intDir = -1;
+        var strMethod;
+        var arrHead = null;
+        var arrMethods = sortProps.split(",");
 
-  this.init = function(){
-    arrHead = document.getElementById(tableID).getElementsByTagName('thead')[0].getElementsByTagName('th');
-    for(var i=0;i<arrHead.length;i++){
-	  arrHead[i].onclick = new Function(tableIDx + ".sortTable(" + i + ",'" + arrMethods[i] + "');");
+        this.init = function(){
+            arrHead = document.getElementById(tableID).getElementsByTagName('thead')[0].getElementsByTagName('th');
+            for(var i=0;i<arrHead.length;i++){
+                arrHead[i].onclick = new Function(tableIDx + ".sortTable(" + i + ",'" + arrMethods[i] + "');");
+            }
+            this.sortTable(intDef,arrMethods[intDef]);
+        };
+
+        this.sortTable = function(intColx,strMethodx){
+            intCol = intColx;
+            strMethod = strMethodx;
+
+            var arrRows = document.getElementById(tableID).getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+
+            intDir = (arrHead[intCol].className=="asc")?-1:1;
+            arrHead[intCol].className = (arrHead[intCol].className=="asc")?"des":"asc";
+            for(var i=0;i<arrHead.length;i++){
+              if(i!=intCol){arrHead[i].className="";}
+            }
+
+            var arrRowsSort = [];
+            for(var i=0;i<arrRows.length;i++){
+              arrRowsSort[i]=arrRows[i].cloneNode(true);
+            }
+            arrRowsSort.sort(sort2dFnc);
+
+            for(var i=0;i<arrRows.length;i++){
+              arrRows[i].parentNode.replaceChild(arrRowsSort[i],arrRows[i]);
+              arrRows[i].className = (i%2==0)?"":"alt";
+            }
+        };
+
+        function sort2dFnc(a,b){
+            var aCell = a.getElementsByTagName("td")[intCol].innerHTML;
+            var bCell = b.getElementsByTagName("td")[intCol].innerHTML;
+
+            switch (strMethod){
+            case "int":
+              aCell = parseInt(aCell);
+              bCell = parseInt(bCell);
+              break;
+            case "float":
+              aCell = parseFloat(aCell);
+              bCell = parseFloat(bCell);
+              break;
+            case "date":
+              aCell = new Date(aCell);
+              bCell = new Date(bCell);
+              break;
+            }
+            return (aCell>bCell)?intDir:(aCell<bCell)?-intDir:0;
+        }
     }
-    this.sortTable(intDef,arrMethods[intDef]);
-  };
-
-  this.sortTable = function(intColx,strMethodx){
-
-    intCol = intColx;
-	strMethod = strMethodx;
-
-	var arrRows = document.getElementById(tableID).getElementsByTagName('tbody')[0].getElementsByTagName('tr');
-
-    intDir = (arrHead[intCol].className=="asc")?-1:1;
-    arrHead[intCol].className = (arrHead[intCol].className=="asc")?"des":"asc";
-	for(var i=0;i<arrHead.length;i++){
-      if(i!=intCol){arrHead[i].className="";}
-	}
-
-	var arrRowsSort = new Array();
-	for(var i=0;i<arrRows.length;i++){
-      arrRowsSort[i]=arrRows[i].cloneNode(true);
-    }
-    arrRowsSort.sort(sort2dFnc);
-
-	for(var i=0;i<arrRows.length;i++){
-	  arrRows[i].parentNode.replaceChild(arrRowsSort[i],arrRows[i]);
-      arrRows[i].className = (i%2==0)?"":"alt";
-	}
-
-  };
-
-  function sort2dFnc(a,b){
-    var col = intCol;
-    var dir = intDir;
-    var aCell = a.getElementsByTagName("td")[col].innerHTML;
-    var bCell = b.getElementsByTagName("td")[col].innerHTML;
-
-    switch (strMethod){
-    case "int":
-      aCell = parseInt(aCell);
-      bCell = parseInt(bCell);
-	  break;
-	case "float":
-      aCell = parseFloat(aCell);
-      bCell = parseFloat(bCell);
-	  break;
-	case "date":
-      aCell = new Date(aCell);
-      bCell = new Date(bCell);
-	  break;
-	}
-    return (aCell>bCell)?dir:(aCell<bCell)?-dir:0;
-  }
-}
-      var t1 = new sortableTable("log-table",0,"int,date,float,float,str,str");
-        window.onload = function(){
+    var t1 = new SortableTable("log-table",0,"int,date,float,float,str,str");
+    window.onload = function(){
         t1.init();
-      }
+    }
     </script>
 HTML;
 
@@ -281,7 +275,6 @@ HTML;
     <form action="?' . Configuration::PANEL_URI . '" method="post">
         <p>
             Download Path: <strong>' . Configuration::BASE_DIRECTORY . '</strong><br />
-            Hotlink Protection: <strong>' . (Configuration::HOTLINK_PROTECTION ? 'ENABLED': 'DISABLED') . '</strong><br />
             Hotlink Protection: <strong>' . (Configuration::HOTLINK_PROTECTION ? 'ENABLED': 'DISABLED') . '</strong><br />
             Log Downloads: <strong>' . (Configuration::LOG_DOWNLOADS ? 'ENABLED': 'DISABLED') . '</strong><br />
 
@@ -364,7 +357,5 @@ HTML;
     }
 }
 
-//˄˅
 Base::Start();
-
 ?>
