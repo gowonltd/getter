@@ -14,6 +14,7 @@ class Configuration {
     const BASE_DIRECTORY = '/www/user/downloads/';
     const HOTLINK_PROTECTION = true;
     const HOTLINK_REDIRECT_URL = null; // if set to null, will simply generate 403 Forbidden Error.
+    const COMPRESS_DOWNLOADS = false;
 
     const LOG_DOWNLOADS = true;
     const LOG_FILENAME = '.getter';
@@ -143,7 +144,11 @@ class Base {
         try {
             if (Configuration::LOG_DOWNLOADS) {
                 $f = fopen(Configuration::LOG_FILENAME, 'a+');
-                fputs($f, date("Y-m-d\t H:i:s") . "\t" . $_SERVER['REMOTE_ADDR'] . "\t" . $_SERVER['HTTP_REFERER'] . "\t" . $file . "\r\n");
+                fputs($f,sprintf("%s,%s,%s,%s,\r\n",
+                    date("Y-m-d,H:i:s"),
+                    $_SERVER['REMOTE_ADDR'],
+                    $_SERVER['HTTP_REFERER'],
+                    $file));
                 fclose($f);
             }
         } catch (\Exception $e) {
@@ -341,7 +346,7 @@ HTML;
     }
 
     // Parse CSV into an array
-    private static function ParseCsv($filename, $delimiter = "\t") {
+    private static function ParseCsv($filename, $delimiter = ",") {
         $f = fopen($filename, 'r');
         if ($f) {
             $data = array();
