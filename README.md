@@ -9,7 +9,7 @@ Getter is a secure, single-file, PHP-powered download handler and logging script
 All editable options are contained in the Configuration class:
 
  - `BASE_DIRECTORY` - Set the directory that all downloadable files will be stored in
- - `BYTE_SERVING` - Flag to allow [download resume (byte serving)][a2]
+ - `BYTE_SERVING` - Flag to allow [byte serving][a2] (also known as download resume)
  - `HOTLINK_PROTECTION` - Flag to set hotlink protection
  - `HOTLINK_REDIRECT_URL` - The redirect destination when hotlinking is detected
  - `LOG_DOWNLOADS` - Flag to set logging
@@ -29,9 +29,9 @@ download.php?[FILENAME]
 download.php?[FILENAME]/[ALIAS]
 download.php?[FILENAME HASH]/[ALIAS]
 ```
-The `[FILENAME]` should be unique for all filed in 
-
 Given a filename, Getter will perform a [depth-first search][b1] through the directory set in `BASE_DIRECTORY`. The `[FILENAME]` should be unique for all files stored in the base directory, even if those two files are not in the same folder/sub-folder. When two files share the same name, Getter will transfer the first file of that name it encounters, which may not be the desired result.
+
+When `[ALIAS]` is provided, the user will be prompted to save the fileunder the alias name, instead of the actual filename.
 
 The `[FILENAME_HASH]` is an [MD5 hash][b2] of the `[FILENAME]` you wish to download. This prevents the use from knowing the actual name of the file you are serving. When using filename hashes, you must provide an alias.
 
