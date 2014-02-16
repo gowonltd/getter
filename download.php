@@ -1,29 +1,30 @@
 <?php
-/*------------------------------------------------------------------------------
-  Getter Version: 0.1
-  Issue Date:     February 2, 2014
-  Copyright (c):  2014 Gowon Patterson, Gowon Designs
-  License:        This program is distributed under the terms of the
-                  GNU General Public License v2
-                  <http://www.gnu.org/licenses/gpl-2.0.html>
-------------------------------------------------------------------------------*/
-
+/**
+ * Getter version 0.1
+ * Version: 0.1
+ * Last Updated: Feb 16, 2014
+ * Copyright: 2014 Gowon Patterson, Gowon Designs
+ * License: GNU General Public License v2 <http://www.gnu.org/licenses/gpl-2.0.html>
+ * @package Getter
+ */
 namespace Getter;
 
+/**
+ * Configuration
+ * Class containing all of the editable parameters of the Getter program
+ * @package Getter\Configuration
+ */
 class Configuration {
     const BASE_DIRECTORY = '/www/user/downloads/';
     const HOTLINK_PROTECTION = true;
     const HOTLINK_REDIRECT_URL = null; // if set to null, will simply generate 403 Forbidden Error.
-    const COMPRESS_DOWNLOADS = false;
-
     const LOG_DOWNLOADS = true;
     const LOG_FILENAME = '.getter';
-
     const PANEL_ON = true;
-    const PANEL_URI = 'admin';
-    const PANEL_ITEMS_MAX_NUM = 200;
+    const PANEL_TOKEN = 'admin';
     const PANEL_USERNAME = 'admin';
     const PANEL_PASSWORD = 'root';
+    const PANEL_ITEMS_MAX_NUM = 200;
     const PANEL_CSS = <<< CSS
 body { background-color: #fff; color: #000; font-family: "Trebuchet MS", sans-serif; }
 table { width: 100%; color: #212424; margin: 0 0 1em 0; font: 80%/150% "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Lucida, Helvetica, sans-serif; }
@@ -41,37 +42,26 @@ table a:visited { text-decoration: line-through; }
 table a:hover { text-decoration: underline; }
 CSS;
 
-    // Allowed extensions list: 'extension' => 'mime type'
-    public static $ALLOWED_EXTENSIONS = array (
-            // archives
+    // Common mime types to properly deliver files
+    public static $MIME_TYPES = array (
         'zip' => 'application/zip',
-
-            // documents
         'pdf' => 'application/pdf',
         'doc' => 'application/msword',
         'xls' => 'application/vnd.ms-excel',
         'ppt' => 'application/vnd.ms-powerpoint',
-
-            // executables
         'exe' => 'application/octet-stream',
-
-            // images
         'gif' => 'image/gif',
         'png' => 'image/png',
         'jpg' => 'image/jpeg',
         'jpeg' => 'image/jpeg',
-
-            // audio
         'mp3' => 'audio/mpeg',
         'wav' => 'audio/x-wav',
-
-            // video
         'mpeg' => 'video/mpeg',
         'mpg' => 'video/mpeg',
         'mpe' => 'video/mpeg',
         'mov' => 'video/quicktime',
         'avi' => 'video/x-msvideo'
-        );
+    );
 
     public static $ALLOWED_DOMAINS = array(
         '*mysite.com',
@@ -79,9 +69,36 @@ CSS;
     );
 }
 
+/**
+ * Base
+ * Main class containing Getter URI logic and methods
+ * @package Getter\Base
+ */
 class Base {
+    /**
+     * Chunk size in bytes. Default 0.5mb = 52633 = 1028 * 512
+     */
+    const CHUNK_SIZE = 52633;
+
+    /**
+     * URL Query String
+     * @var string $uri
+     */
+    private static $uri;
+
+    /**
+     * Initiate Getter program
+     */
     public static function Start() {
-        if (Configuration::PANEL_ON && $_SERVER['QUERY_STRING'] == Configuration::PANEL_URI) {
+        error_reporting(0);
+        apache_setenv('no-gzip', 1);
+        ini_set('zlib.output_compression', 'Off');
+
+        //must sanitize uri before processing it
+        self::$uri = preg_replace('/[^a-zA-Z0-9.%//]/', '', $_SERVER['QUERY_STRING']);
+
+
+        if (Configuration::PANEL_ON && self::$uri == Configuration::PANEL_TOKEN) {
             self::Panel();
             exit;
         }
@@ -110,15 +127,20 @@ class Base {
         self::Download();
     }
 
+    /**
+     * Serve file to client
+     */
     private static function Download() {
-        set_time_limit(0); // max script execution time (0 = no limit)
-        $uri = explode("/",$_SERVER['QUERY_STRING']);
+        $uri = explode('/', self::$uri);
         $path = null;
 
-        if (!empty($uri)) {
-            $file = str_replace('%20', ' ', basename($uri[0]));
-            self::GetFilePath(Configuration::BASE_DIRECTORY, $file, $path);
+        if (empty($uri)) {
+            header("HTTP/1.0 400 Bad Request");
+            exit;
         }
+
+        $filename = str_replace('%20', ' ', basename($uri[0]));
+        self::GetFilePath(Configuration::BASE_DIRECTORY, $filename, $path);
 
         if (!is_file($path)) {
             header('HTTP/1.1 404 Not Found');
@@ -126,20 +148,9 @@ class Base {
         }
 
         $size = filesize($path);
-        $file = basename($path);
-        $extension = strtolower(substr(strrchr($file, "."), 1)); // get file extension
-
-        // check if allowed extension
-        if (!array_key_exists($extension, Configuration::$ALLOWED_EXTENSIONS)) {
-            header('HTTP/1.1 404 Not Found');
-            exit;
-        }
-
-        // get mime type
-        $mimeType = Configuration::$ALLOWED_EXTENSIONS[$extension];
-        if ($mimeType === null) {
-            $mimeType = "application/octet-stream";
-        }
+        $filename = basename($path);
+        $extension = strtolower(substr(strrchr($filename, "."), 1));
+        $mimeType = isset(Configuration::$MIME_TYPES[$extension]) ? Configuration::$MIME_TYPES[$extension] : 'application/octet-stream';
 
         try {
             if (Configuration::LOG_DOWNLOADS) {
@@ -148,7 +159,7 @@ class Base {
                     date("Y-m-d,H:i:s"),
                     $_SERVER['REMOTE_ADDR'],
                     $_SERVER['HTTP_REFERER'],
-                    $file));
+                    $filename));
                 fclose($f);
             }
         } catch (\Exception $e) {
@@ -156,20 +167,80 @@ class Base {
             error_log('Getter was unable to access log file: ' . Configuration::LOG_FILENAME, 0);
         }
 
-        // set headers
-        header('Pragma: public');
-        header('Expires: 0');
-        header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
-        header('Cache-Control: public');
-        header('Content-Description: File Transfer');
+        $file = fopen($path,"rb");
+        if ($file === false) {
+            header("HTTP/1.0 500 Internal Server Error");
+            exit;
+        }
+
+        // set the headers, prevent caching
+        header("Pragma: public");
+        header("Expires: -1");
+        header("Cache-Control: public, must-revalidate, post-check=0, pre-check=0");
+        header('Content-Disposition: attachment; filename="' . (empty($uri[1]) ? $filename : $uri[1]) . '"');
         header('Content-Type: ' . $mimeType);
-        header('Content-Disposition: attachment; filename="' . (empty($uri[1]) ? $file : $uri[1]) . '"');
-        header('Content-Transfer-Encoding: binary');
         header('Content-Length: ' . $size);
-        ob_end_flush();
+        header('Accept-Ranges: bytes');
+
+
+        $range = null;
+        $seekStart = 0;
+        //check if http_range is sent by browser (or download manager)
+        if(isset($_SERVER['HTTP_RANGE']))
+        {
+            list($sizeUnit, $range_orig) = explode('=', $_SERVER['HTTP_RANGE'], 2);
+            if ($sizeUnit == 'bytes')
+            {
+                //multiple ranges could be specified at the same time, but for simplicity only serve the first range
+                //http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
+                list($range, $extra_ranges) = explode(',', $range_orig, 2);
+            }
+            else {
+                header('HTTP/1.1 416 Requested Range Not Satisfiable');
+                exit;
+            }
+
+            //figure out download piece from range (if set)
+            list($seekStart, $seekEnd) = explode('-', $range, 2);
+
+            //set start and end based on range (if set), else set defaults
+            //also check for invalid ranges.
+            $seekEnd   = (empty($seekEnd)) ? ($size - 1) : min(abs(intval($seekEnd)), ($size - 1));
+            $seekStart = (empty($seekStart) || $seekEnd < abs(intval($seekStart))) ? 0 : max(abs(intval($seekStart)), 0);
+
+            //Only send partial content header if downloading a piece of the file (IE workaround)
+            if ($seekStart > 0 || $seekEnd < ($size - 1))
+            {
+                header('HTTP/1.1 206 Partial Content');
+                header('Content-Range: bytes ' . $seekStart . '-' . $seekEnd . '/' . $size);
+                header('Content-Length: ' . ($seekEnd - $seekStart + 1));
+            }
+        }
+
+        set_time_limit(0); // Disable time limit while serving files
+        fseek($file, $seekStart);
+        while (!feof($file)) {
+            echo fread($file, self::CHUNK_SIZE);
+            ob_flush();
+            flush();
+            // Stop sending if the connection has been aborted or timed out
+            if (connection_status() !== CONNECTION_NORMAL) {
+                break;
+            }
+        }
+
+        fclose($file);
+        exit;
+
+        /*
+        ob_end_clean(); //ob_end_flush();
         readfile($path);
+        //*/
     }
 
+    /**
+     * Load Web Panel to manage download lot
+     */
     private static function Panel() {
         if (Configuration::PANEL_USERNAME != $_SERVER['PHP_AUTH_USER'] || Configuration::PANEL_PASSWORD != $_SERVER['PHP_AUTH_PW']) {
             header('WWW-Authenticate: Basic realm="Getter Control Panel"');
@@ -183,10 +254,8 @@ class Base {
             header('Expires: 0');
             header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
             header('Cache-Control: public');
-            header('Content-Description: File Transfer');
-            header('Content-Type: text/plain');
-            header('Content-Disposition: attachment; filename="getter-log-' . date('YmdHis') . '.txt');
-            header('Content-Transfer-Encoding: binary');
+            header('Content-Type: text/csv');
+            header('Content-Disposition: attachment; filename="getter-log-' . date('YmdHis') . '.csv');
             header('Content-Length: ' . filesize(Configuration::LOG_FILENAME));
             //ob_end_flush();
             readfile(Configuration::LOG_FILENAME);
@@ -277,7 +346,7 @@ HTML;
         $html .= '</head>
 <body>
     <h1>Getter Control Panel</h1>
-    <form action="?' . Configuration::PANEL_URI . '" method="post">
+    <form action="?' . Configuration::PANEL_TOKEN . '" method="post">
         <p>
             Download Path: <strong>' . Configuration::BASE_DIRECTORY . '</strong><br />
             Hotlink Protection: <strong>' . (Configuration::HOTLINK_PROTECTION ? 'ENABLED': 'DISABLED') . '</strong><br />
@@ -300,7 +369,7 @@ HTML;
             <h2>Download Log</h2>
             Log Start Date: <strong>' . $date . '</strong><br />
             Total Downloads: <strong>' . $count . '</strong><br />
-            <table id="log-table"><thead><tr><th>##</th><th>Date</th><th>Time</th><th>IP Address</th><th>Referer</th><th>File Downloaded</th></tr></thead>\n\n<tbody>';
+            <table id="log-table"><thead><tr><th>##</th><th>Date</th><th>Time</th><th>IP Address</th><th>Referrer</th><th>File Downloaded</th></tr></thead>\n\n<tbody>';
 
             for ($i = ($count - 1); isset($data[$i]); $i--) {
                 if ($data[$i][0] != '') {
