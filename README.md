@@ -1,4 +1,4 @@
-# [Getter][title]
+# Getter
 
 Getter is a secure, single-file, PHP-powered download handler and logging script. Getter gives your clients the ability to download files without revealing the actual name or directory structure of your server. Built-in hotlink protection also prevents bandwidth leeching from other websites.
 
@@ -9,7 +9,6 @@ Getter is a secure, single-file, PHP-powered download handler and logging script
 All editable options are contained in the Configuration class:
 
  - `BASE_DIRECTORY` - Set the directory that all downloadable files will be stored in
- - `BYTE_SERVING` - Flag to allow [byte serving][a2] (also known as download resume)
  - `HOTLINK_PROTECTION` - Flag to set hotlink protection
  - `HOTLINK_REDIRECT_URL` - The redirect destination when hotlinking is detected
  - `LOG_DOWNLOADS` - Flag to set logging
@@ -20,6 +19,8 @@ All editable options are contained in the Configuration class:
  - `PANEL_USERNAME` - HTTP Auth username for the Web Panel
  - `PANEL_PASSWORD` - HTTP Auth password for the Web Panel
  - `PANEL_CSS` - Internal CSS stylesheet for the Web Panel
+ - `$MIME_TYPES`
+ - `$HOTLINK_WHITELIST`
 
 ## Serving Downloads
 There are 3 ways to download a file using Getter:
@@ -27,16 +28,13 @@ There are 3 ways to download a file using Getter:
 ```html
 download.php?[FILENAME]
 download.php?[FILENAME]/[ALIAS]
-download.php?[FILENAME HASH]/[ALIAS]
+download.php?[FILENAME_HASH]/[ALIAS]
 ```
 Given a filename, Getter will perform a [depth-first search][b1] through the directory set in `BASE_DIRECTORY`. The `[FILENAME]` should be unique for all files stored in the base directory, even if those two files are not in the same folder/sub-folder. When two files share the same name, Getter will transfer the first file of that name it encounters, which may not be the desired result.
 
 When `[ALIAS]` is provided, the user will be prompted to save the fileunder the alias name, instead of the actual filename.
 
 The `[FILENAME_HASH]` is an [MD5 hash][b2] of the `[FILENAME]` you wish to download. This prevents the use from knowing the actual name of the file you are serving. When using filename hashes, you must provide an alias.
-
-### Byte Serving
-Byte serving is useful when you are sending very large files over the internet. In the situation that a connection is lost with the client before the file transfer is complete, the client can resume the download from that point instead of having to start the download over. This can save greatly on bandwidth.
 
 ### Hotlink Protection
 Redirect to a page or serve 403 Forbidden error.
@@ -62,9 +60,7 @@ Copyright &copy; 2007-2014 Gowon Patterson, Gowon Designs.
 
 This program is distributed under the terms of the [GNU General Public License Version 2][license].
 
-[title]: https://github.com/gowondesigns/getter/
 [a1]: https://github.com/gowondesigns/getter/zipball/master
-[a2]: http://en.wikipedia.org/wiki/Byte_serving
 [b1]: http://en.wikipedia.org/wiki/Depth-first_search
 [b2]: http://en.wikipedia.org/wiki/MD5
 [license]: http://www.gnu.org/licenses/gpl-2.0.html
