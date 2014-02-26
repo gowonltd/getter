@@ -17,6 +17,7 @@ namespace Getter;
 class Configuration {
     const BASE_DIRECTORY = '/www/user/downloads'; // Do not include trailing slash
     const HOTLINK_PROTECTION = true;
+    const HOTLINK_PROTECTION_ALLOW_NULL = true;
     const HOTLINK_REDIRECT_URL = null; // if set to null, will simply generate 403 Forbidden Error.
     const LOG_DOWNLOADS = true;
     const LOG_FILENAME = '.getter';
@@ -29,17 +30,17 @@ class Configuration {
 body { background-color: #fff; color: #000; font-family: "Trebuchet MS", sans-serif; }
 table { width: 100%; color: #212424; margin: 0 0 1em 0; font: 80%/150% "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Lucida, Helvetica, sans-serif; }
 table, tr, th, td { margin: 0; padding: 0; border-spacing: 0; border-collapse: collapse; }
-thead { background-color: #000; }
+thead { background-color: #000033; }
 thead tr th { padding: 1em 0; text-align: center; color: #FAF7D4; border-bottom: 3px solid #999; }
-tbody tr td { background-color: #eee; }
+tbody tr td { background-color: #fff; }
 tbody tr.odd td { background-color: #ddd; }
 tbody tr th, tbody tr td { padding: 0.1em 0.4em; border: 1px solid #999; }
 tbody tr th { padding-right: 1em; text-align: right;  font-weight: normal; background-color: #aaa; text-transform: uppercase; }
-tbody tr th:hover { background-color: #ddd; }
-tbody tr:hover td { background: #ccc; color: #000; }
-table a { color: #854400; text-decoration: none; }
-table a:visited { text-decoration: line-through; }
-table a:hover { text-decoration: underline; }
+tbody tr th:hover { background-color: #cccccc; }
+tbody tr:hover td { background: #eeeeee; color: #000; }
+a { color: #0000cc; text-decoration: none; }
+a:visited { text-decoration: line-through; }
+a:hover { text-decoration: underline; }
 CSS;
 
     // Common mime types to properly deliver files
@@ -111,8 +112,9 @@ class Base {
             exit;
         }
 
+        // Hotlink Protection
         Configuration::$HOTLINK_WHITELIST[] = $_SERVER['HTTP_HOST'];
-        $isValidReferrer = false;
+        $isValidReferrer = (Configuration::HOTLINK_PROTECTION_ALLOW_NULL && !isset($_SERVER['HTTP_REFERER'])) ? true: false;
 
         foreach (Configuration::$HOTLINK_WHITELIST as $domain) {
             $pattern = '/^' . str_replace('*', '([0-9a-zA-Z]|\-|\_)+', str_replace('.', '\.', $domain)) . '$/';
@@ -151,7 +153,10 @@ class Base {
         $filename = str_replace('%20', ' ', basename($uri[0]));
         self::GetFilePath(Configuration::BASE_DIRECTORY, $filename, $path);
 
-        if (!is_file($path)) {
+        $md5Detected = preg_match("/^[0-9a-f]{32}$/i", $filename);
+        $alias = !$md5Detected || $md5Detected && !empty($uri[1]);
+
+        if (!is_file($path) || !$alias) {
             header('HTTP/1.1 404 Not Found');
             echo "<h1>HTTP/1.1 404 Not Found</h1><p>The requested URL was not found on this server.</p>";
             exit;
@@ -178,14 +183,15 @@ class Base {
             error_log('Getter was unable to access log file: ' . Configuration::LOG_FILENAME, 0);
         }
 
-        $file = fopen($path,"rb");
+        $file = fopen($path, "rb");
+
         if ($file === false) {
             header("HTTP/1.0 500 Internal Server Error");
             echo "<h1>HTTP/1.0 500 Internal Server Error</h1><p>The server failed to process your request.</p>";
             exit;
         }
 
-        // set the headers, prevent caching
+        header('HTTP/1.1 200 OK');
         header("Pragma: public");
         header("Expires: -1");
         header("Cache-Control: public, must-revalidate, post-check=0, pre-check=0");
@@ -349,7 +355,7 @@ LOGTABLE;
             $formattedHtml .= '</p></form>';
         }
 
-        $formattedHtml .= "\n</body>\n</html>";
+        $formattedHtml .= "\n\t<p id=\"footer\">&copy; 2014 <a href=\"http://gowondesigns.com\" target=\"_blank\">Gowon Designs</a></p>\n</body>\n</html>";
 
         echo $html . sprintf($formattedHtml,
                 Configuration::PANEL_CSS,

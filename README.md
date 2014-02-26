@@ -10,6 +10,7 @@ All editable options are contained in the Configuration class:
 
  - `BASE_DIRECTORY` - Set the directory that all downloadable files will be stored in
  - `HOTLINK_PROTECTION` - Flag to set hotlink protection
+ - `HOTLINK_PROTECTION_ALLOW_NULL`
  - `HOTLINK_REDIRECT_URL` - The redirect destination when hotlinking is detected
  - `LOG_DOWNLOADS` - Flag to set logging
  - `LOG_FILENAME` - The filename of the download log
