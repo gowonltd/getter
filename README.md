@@ -41,7 +41,7 @@ The `[FILENAME_HASH]` is an [MD5 hash][b2] of the `[FILENAME]` you wish to downl
 ## Hotlink Protection
 When `HOTLINK_PROTECTION` is set to __true__, Getter will only serve request given from domains in the `$HOTLINK_WHITELIST`. When an unauthorized request is made, the user will be redirected to the url set in `HOTLINK_REDIRECT_URL`. If it is __null__, the user will be presented with a 403 Forbidden error.
 
-Simply adding `mydomain.com` to the whitelist will not give access to any subdomain (eg. `sub.mydomain.com`, or even  `www.domain.com`). Each specific domain URL must be included in the whitelist. To give broad access to a domain, use the wildcard `*` (eg. `*mydomain.com`).
+Simply adding `mydomain.com` to the whitelist will not give access to any subdomain (eg. `sub.mydomain.com`, or even  `www.mydomain.com`). Each specific domain URL must be included in the whitelist. To give broad access to a domain, use the wildcard `*` (eg. `*mydomain.com`).
 
 Getter relies on the HTTP Referer information given by the client to provide hotlink protection. This is imperfect, as HTTP Referer information can be spoofed and there are many cases in which the client does not give any information. When `HOTLINK_PROTECTION_ALLOW_NULL` is set to __true__, Getter will serve downloads to null referrers when hotlink protection is active. Setting this to __false__ will produce a much more strict behavior.
 
