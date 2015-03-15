@@ -270,7 +270,7 @@ class Base {
             var filename = $('#file-name').val(),
                     alias = (!$('#file-alias').val().length) ? filename: $('#file-alias').val(),
                     filehash = md5(filename),
-                    htmlText = '<a href="{%%HTML_LINK_PATH%%}/?' + filehash + '/' + alias + '">Download ' + alias + '</a>';
+                    htmlText = '<a href="{%%HTML_LINK_PATH%%}?' + filehash + '/' + alias + '">Download ' + alias + '</a>';
             $('#file-hash').val(filehash);
             $('#html-text').val(htmlText);
         });
@@ -494,7 +494,8 @@ DASHBOARD;
             '{%%TABLE_DATA%%}' => '',
             '{%%LOG_COUNT%%}' => 0,
             '{%%LOG_ORIG_DATE%%}' => (new \DateTime())->format(\DateTime::RFC822),
-            '{%%LOG_READ_LIMIT%%}' => Configuration::DASHBOARD_ITEMS_MAX_NUM
+            '{%%LOG_READ_LIMIT%%}' => Configuration::DASHBOARD_ITEMS_MAX_NUM,
+            '{%%HTML_LINK_PATH%%}' => self::GetCurrentPath()
         );
 
         $variables['{%%LOG_ACTIVE%%}'] = Configuration::LOG_DOWNLOADS
@@ -541,7 +542,7 @@ DASHBOARD;
         echo str_replace(array_keys($variables), $variables, self::DASHBOARD_HTML);
     }
 
-    private static function GetFilePath ($directory, $fileName, &$filePath) {
+    private static function GetFilePath($directory, $fileName, &$filePath) {
         $dir = opendir($directory);
         while (false !== ($file = readdir($dir))) {
             if (empty($filePath) && $file != '.' && $file != '..') {
@@ -576,6 +577,21 @@ DASHBOARD;
             return $data;
         }
         return null;
+    }
+
+    private static function GetCurrentPath() {
+        $s = &$_SERVER;
+        $ssl = (!empty($s['HTTPS']) && $s['HTTPS'] == 'on') ? true:false;
+        $sp = strtolower($s['SERVER_PROTOCOL']);
+        $protocol = substr($sp, 0, strpos($sp, '/')) . (($ssl) ? 's' : '');
+        $port = $s['SERVER_PORT'];
+        $port = ((!$ssl && $port=='80') || ($ssl && $port=='443')) ? '' : ':'.$port;
+        $host = isset($s['HTTP_X_FORWARDED_HOST']) ? $s['HTTP_X_FORWARDED_HOST'] : (isset($s['HTTP_HOST']) ? $s['HTTP_HOST'] : null);
+        $host = isset($host) ? $host : $s['SERVER_NAME'] . $port;
+        $uri = $protocol . '://' . $host . $s['REQUEST_URI'];
+        $segments = explode('?', $uri, 2);
+        $url = $segments[0];
+        return $url;
     }
 }
 
