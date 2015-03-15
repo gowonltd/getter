@@ -1,10 +1,10 @@
 <?php
 /**
  * Getter - Single file PHP download manager.
- * Version: 0.1
- * Last Updated: Feb 16, 2014
- * Copyright: 2014 Gowon Patterson, Gowon Designs
- * License: GNU General Public License v2 <http://www.gnu.org/licenses/gpl-2.0.html>
+ * Version: 1.1.0
+ * Last Updated: Mar 14, 2015
+ * Copyright: 2015 Gowon Designs Ltd. Co.
+ * License: GNU General Public License v3 <http://www.gnu.org/licenses/gpl-3.0.html>
  * @package Getter
  */
 namespace Getter;
@@ -21,27 +21,11 @@ class Configuration {
     const HOTLINK_REDIRECT_URL = null; // if set to null, will simply generate 403 Forbidden Error.
     const LOG_DOWNLOADS = true;
     const LOG_FILENAME = '.getter';
-    const PANEL_ON = true;
-    const PANEL_TOKEN = 'admin';
-    const PANEL_USERNAME = 'admin';
-    const PANEL_PASSWORD = 'root';
-    const PANEL_ITEMS_MAX_NUM = 200;
-    const PANEL_CSS = <<< CSS
-body { background-color: #fff; color: #000; font-family: "Trebuchet MS", sans-serif; }
-table { width: 100%; color: #212424; margin: 0 0 1em 0; font: 80%/150% "Lucida Grande", "Lucida Sans Unicode", "Lucida Sans", Lucida, Helvetica, sans-serif; }
-table, tr, th, td { margin: 0; padding: 0; border-spacing: 0; border-collapse: collapse; }
-thead { background-color: #000033; }
-thead tr th { padding: 1em 0; text-align: center; color: #FAF7D4; border-bottom: 3px solid #999; }
-tbody tr td { background-color: #fff; }
-tbody tr.odd td { background-color: #ddd; }
-tbody tr th, tbody tr td { padding: 0.1em 0.4em; border: 1px solid #999; }
-tbody tr th { padding-right: 1em; text-align: right;  font-weight: normal; background-color: #aaa; text-transform: uppercase; }
-tbody tr th:hover { background-color: #cccccc; }
-tbody tr:hover td { background: #eeeeee; color: #000; }
-a { color: #0000cc; text-decoration: none; }
-a:visited { text-decoration: line-through; }
-a:hover { text-decoration: underline; }
-CSS;
+    const DASHBOARD_ON = true;
+    const DASHBOARD_TOKEN = 'admin';
+    const DASHBOARD_USERNAME = 'admin';
+    const DASHBOARD_PASSWORD = 'root';
+    const DASHBOARD_ITEMS_MAX_NUM = 200;
 
     // Common mime types to properly deliver files
     public static $MIME_TYPES = array (
@@ -76,10 +60,230 @@ CSS;
  * @package Getter\Base
  */
 class Base {
+
+    const VERSION = "1.1";
+
     /**
      * Chunk size in bytes. Default 0.5mb = 52633 = 1028 * 512
      */
     const CHUNK_SIZE = 52633;
+
+    const DASHBOARD_HTML = <<<DASHBOARD
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title>Getter {%%VERSION%%} Dashboard</title>
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/css/bootstrap.min.css">
+    <link rel="stylesheet" href="//maxcdn.bootstrapcdn.com/font-awesome/4.3.0/css/font-awesome.min.css">
+    <link rel="stylesheet" href="//cdn.datatables.net/1.10.5/css/jquery.dataTables.min.css">
+</head>
+<body>
+
+<div class="container">
+    <!-- Static navbar -->
+    <nav class="navbar navbar-default">
+        <div class="container-fluid">
+            <div class="navbar-header">
+                <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
+                    <span class="sr-only">Toggle navigation</span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                    <span class="icon-bar"></span>
+                </button>
+                <span class="navbar-brand">Getter {%%VERSION%%} Dashboard</span>
+            </div>
+            <div id="navbar" class="navbar-collapse collapse">
+                <ul class="nav navbar-nav">
+                    <li><a href="https://github.com/gowondesigns/getter" target="_blank"><i class="fa fa-book"></i> Documentation</a></li>
+                    <li><a href="https://github.com/gowondesigns/getter/issues" target="_blank"><i class="fa fa-exclamation-circle"></i> Report an Issue</a></li>
+                </ul>
+                <ul class="nav navbar-nav navbar-right">
+                    <li><a href="http://gowondesigns.com" target="_blank">&copy; 2015 Gowon Designs</a></li>
+                </ul>
+            </div><!--/.nav-collapse -->
+        </div><!--/.container-fluid -->
+    </nav>
+
+    <div class="alert alert-danger" role="alert" style="display: {%%BASE_DIR_WARNING%%}">
+        <strong>Warning!</strong> The base directory path "<strong>{%%BASE_DIR%%}</strong>" could not be resolved. Getter will not be able to manage your files until this is resolved. Please update your file's configuration to fix this problem.
+    </div>
+
+    <div role="tabpanel">
+
+        <!-- Nav tabs -->
+        <ul class="nav nav-pills nav-justified" role="tablist" id="dashboardMenu">
+            <li role="presentation" class="active"><a href="#configuration" id="configurationTab" aria-controls="configuration" role="tab" data-toggle="tab"><i class="fa fa-cogs"></i> Configuration</a></li>
+            <li role="presentation"><a href="#log" id="logTab" aria-controls="log" role="tab" data-toggle="tab"><i class="fa fa-bar-chart"></i> Log</a></li>
+            <li role="presentation"><a href="#tool" id="toolTab" aria-controls="tool" role="tab" data-toggle="tab"><i class="fa fa-wrench"></i> Link Generator</a></li>
+        </ul>
+
+        <!-- Tab panes -->
+        <div class="tab-content" style="margin-top: 10px">
+            <div role="tabpanel" class="tab-pane fade in active" id="configuration">
+                <div class="row">
+                    <div class="col-md-6">
+                        <table class="table">
+                            <thead>
+                            <tr>
+                                <th>Setting</th>
+                                <th>Value</th>
+                            </tr>
+                            </thead>
+                            <tbody>
+                            <tr>
+                                <td>Download Base Directory</td>
+                                <td><strong>{%%BASE_DIR_RESOLVED%%}</strong></td>
+                            </tr>
+                            <tr>
+                                <td>Hotlink Protection</td>
+                                <td>{%%HOTLINK_ACTIVE%%}</td>
+                            </tr>
+                            <tr>
+                                <td>Hotlink Protection Behavior</td>
+                                <td>{%%HOTLINK_BEHAVIOR%%}</td>
+                            </tr>
+                            <tr>
+                                <td>Allow Null Referers</td>
+                                <td>{%%HOTLINK_NULL_PERMIT%%}</td>
+                            </tr>
+                            <tr>
+                                <td>Logging</td>
+                                <td>{%%LOG_ACTIVE%%}</td>
+                            </tr>
+                            <tr>
+                                <td>Log Read Limit</td>
+                                <td><strong>{%%LOG_READ_LIMIT%%}</strong></td>
+                            </tr>
+                            </tbody>
+                        </table>
+                    </div>
+
+                    <div class="col-md-6">
+                        <div class="panel panel-primary">
+                            <div class="panel-heading">
+                                <h3 class="panel-title">Manage Log</h3>
+                            </div>
+                            <div class="panel-body">
+                                <p>There have been <strong>{%%LOG_COUNT%%}</strong> downloads since <strong>{%%LOG_ORIG_DATE%%}</strong>.</p>
+                                <form method="post">
+                                    <p>
+                                        <a href="" class="btn btn-default"><i class="fa fa-refresh"></i> Reload</a>
+                                        <button type="submit" name="DownloadLog" class="btn btn-primary"><i class="fa fa-download"></i> Download</button>
+                                        <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#clearLogModal"><i class="fa fa-trash"></i> Clear</button>
+                                    </p>
+                                </form>
+                            </div>
+                        </div>
+                    </div><!-- /.col-sm-4 -->
+                </div>
+            </div>
+
+            <div role="tabpanel" class="tab-pane fade" id="log">
+                <table id="log-table" class="display" cellspacing="0" width="100%">
+                    <thead>
+                    <tr>
+                        <th>IP Address</th>
+                        <th>Referer</th>
+                        <th>Date</th>
+                        <th>File</th>
+                    </tr>
+                    </thead>
+
+                    <tbody>
+                    {%%TABLE_DATA%%}
+                    </tbody>
+                </table>
+            </div>
+
+            <div role="tabpanel" class="tab-pane fade" id="tool">
+                <div class="row">
+                    <div class="col-md-6 col-md-offset-3">
+                        <div class="form-group">
+                            <label for="file-name">Filename</label>
+                            <input type="text" class="form-control" placeholder="Filename with extension (ie. example.txt)" id="file-name">
+                        </div>
+
+                        <div class="form-group">
+                            <label for="file-alias">Optional File Alias</label>
+                            <input type="text" class="form-control" id="file-alias">
+                        </div>
+
+                        <p>
+                            <button class="btn btn-primary" type="button" id="generate-button">Generate</button>
+                        </p>
+
+                        <div class="well">
+                            <div class="form-group">
+                                <label for="file-hash">Filename MD5 Hash</label>
+                                <input type="text" class="form-control" id="file-hash">
+                            </div>
+
+                            <div class="form-group">
+                                <label for="html-text">HTML Link</label>
+                                <textarea class="form-control" rows="3" id="html-text" style="font-family: 'Courier New'"></textarea>
+                            </div>
+                        </div>
+                    </div><!-- /.col-lg-6 -->
+                </div><!-- /.row -->
+            </div>
+        </div>
+    </div>
+</div> <!-- /container -->
+
+<!-- Modal -->
+<div class="modal fade" id="clearLogModal" tabindex="-1" role="dialog" aria-labelledby="myModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
+                <h4 class="modal-title" id="myModalLabel">Confirm Clear Log</h4>
+            </div>
+            <div class="modal-body">
+                <p>Clearing the log deletes the physical file from your server. This process is not reversible. It is recommended that you download the log first before clearing it. Are you sure you want to continue?</p>
+            </div>
+            <div class="modal-footer">
+                <form method="post">
+                    <button type="button" class="btn btn-default" data-dismiss="modal">Cancel</button>
+                    <button type="submit" name="ClearLog" class="btn btn-danger">Clear Log</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Load Javascript Assets -->
+<script src="//code.jquery.com/jquery-2.1.3.min.js"></script>
+<script src="//maxcdn.bootstrapcdn.com/bootstrap/3.3.2/js/bootstrap.min.js"></script>
+<script src="//cdn.datatables.net/1.10.5/js/jquery.dataTables.min.js"></script>
+
+<script>
+    // https://github.com/blueimp/JavaScript-MD5
+    !function(a){"use strict";function b(a,b){var c=(65535&a)+(65535&b),d=(a>>16)+(b>>16)+(c>>16);return d<<16|65535&c}function c(a,b){return a<<b|a>>>32-b}function d(a,d,e,f,g,h){return b(c(b(b(d,a),b(f,h)),g),e)}function e(a,b,c,e,f,g,h){return d(b&c|~b&e,a,b,f,g,h)}function f(a,b,c,e,f,g,h){return d(b&e|c&~e,a,b,f,g,h)}function g(a,b,c,e,f,g,h){return d(b^c^e,a,b,f,g,h)}function h(a,b,c,e,f,g,h){return d(c^(b|~e),a,b,f,g,h)}function i(a,c){a[c>>5]|=128<<c%32,a[(c+64>>>9<<4)+14]=c;var d,i,j,k,l,m=1732584193,n=-271733879,o=-1732584194,p=271733878;for(d=0;d<a.length;d+=16)i=m,j=n,k=o,l=p,m=e(m,n,o,p,a[d],7,-680876936),p=e(p,m,n,o,a[d+1],12,-389564586),o=e(o,p,m,n,a[d+2],17,606105819),n=e(n,o,p,m,a[d+3],22,-1044525330),m=e(m,n,o,p,a[d+4],7,-176418897),p=e(p,m,n,o,a[d+5],12,1200080426),o=e(o,p,m,n,a[d+6],17,-1473231341),n=e(n,o,p,m,a[d+7],22,-45705983),m=e(m,n,o,p,a[d+8],7,1770035416),p=e(p,m,n,o,a[d+9],12,-1958414417),o=e(o,p,m,n,a[d+10],17,-42063),n=e(n,o,p,m,a[d+11],22,-1990404162),m=e(m,n,o,p,a[d+12],7,1804603682),p=e(p,m,n,o,a[d+13],12,-40341101),o=e(o,p,m,n,a[d+14],17,-1502002290),n=e(n,o,p,m,a[d+15],22,1236535329),m=f(m,n,o,p,a[d+1],5,-165796510),p=f(p,m,n,o,a[d+6],9,-1069501632),o=f(o,p,m,n,a[d+11],14,643717713),n=f(n,o,p,m,a[d],20,-373897302),m=f(m,n,o,p,a[d+5],5,-701558691),p=f(p,m,n,o,a[d+10],9,38016083),o=f(o,p,m,n,a[d+15],14,-660478335),n=f(n,o,p,m,a[d+4],20,-405537848),m=f(m,n,o,p,a[d+9],5,568446438),p=f(p,m,n,o,a[d+14],9,-1019803690),o=f(o,p,m,n,a[d+3],14,-187363961),n=f(n,o,p,m,a[d+8],20,1163531501),m=f(m,n,o,p,a[d+13],5,-1444681467),p=f(p,m,n,o,a[d+2],9,-51403784),o=f(o,p,m,n,a[d+7],14,1735328473),n=f(n,o,p,m,a[d+12],20,-1926607734),m=g(m,n,o,p,a[d+5],4,-378558),p=g(p,m,n,o,a[d+8],11,-2022574463),o=g(o,p,m,n,a[d+11],16,1839030562),n=g(n,o,p,m,a[d+14],23,-35309556),m=g(m,n,o,p,a[d+1],4,-1530992060),p=g(p,m,n,o,a[d+4],11,1272893353),o=g(o,p,m,n,a[d+7],16,-155497632),n=g(n,o,p,m,a[d+10],23,-1094730640),m=g(m,n,o,p,a[d+13],4,681279174),p=g(p,m,n,o,a[d],11,-358537222),o=g(o,p,m,n,a[d+3],16,-722521979),n=g(n,o,p,m,a[d+6],23,76029189),m=g(m,n,o,p,a[d+9],4,-640364487),p=g(p,m,n,o,a[d+12],11,-421815835),o=g(o,p,m,n,a[d+15],16,530742520),n=g(n,o,p,m,a[d+2],23,-995338651),m=h(m,n,o,p,a[d],6,-198630844),p=h(p,m,n,o,a[d+7],10,1126891415),o=h(o,p,m,n,a[d+14],15,-1416354905),n=h(n,o,p,m,a[d+5],21,-57434055),m=h(m,n,o,p,a[d+12],6,1700485571),p=h(p,m,n,o,a[d+3],10,-1894986606),o=h(o,p,m,n,a[d+10],15,-1051523),n=h(n,o,p,m,a[d+1],21,-2054922799),m=h(m,n,o,p,a[d+8],6,1873313359),p=h(p,m,n,o,a[d+15],10,-30611744),o=h(o,p,m,n,a[d+6],15,-1560198380),n=h(n,o,p,m,a[d+13],21,1309151649),m=h(m,n,o,p,a[d+4],6,-145523070),p=h(p,m,n,o,a[d+11],10,-1120210379),o=h(o,p,m,n,a[d+2],15,718787259),n=h(n,o,p,m,a[d+9],21,-343485551),m=b(m,i),n=b(n,j),o=b(o,k),p=b(p,l);return[m,n,o,p]}function j(a){var b,c="";for(b=0;b<32*a.length;b+=8)c+=String.fromCharCode(a[b>>5]>>>b%32&255);return c}function k(a){var b,c=[];for(c[(a.length>>2)-1]=void 0,b=0;b<c.length;b+=1)c[b]=0;for(b=0;b<8*a.length;b+=8)c[b>>5]|=(255&a.charCodeAt(b/8))<<b%32;return c}function l(a){return j(i(k(a),8*a.length))}function m(a,b){var c,d,e=k(a),f=[],g=[];for(f[15]=g[15]=void 0,e.length>16&&(e=i(e,8*a.length)),c=0;16>c;c+=1)f[c]=909522486^e[c],g[c]=1549556828^e[c];return d=i(f.concat(k(b)),512+8*b.length),j(i(g.concat(d),640))}function n(a){var b,c,d="0123456789abcdef",e="";for(c=0;c<a.length;c+=1)b=a.charCodeAt(c),e+=d.charAt(b>>>4&15)+d.charAt(15&b);return e}function o(a){return unescape(encodeURIComponent(a))}function p(a){return l(o(a))}function q(a){return n(p(a))}function r(a,b){return m(o(a),o(b))}function s(a,b){return n(r(a,b))}function t(a,b,c){return b?c?r(b,a):s(b,a):c?p(a):q(a)}"function"==typeof define&&define.amd?define(function(){return t}):a.md5=t}(this);
+
+    // initialize dashboard
+    $(document).ready(function() {
+        $('#log-table').DataTable();
+
+        $('#generate-button').click(function(){
+            if (!$('#file-name').val().length) return false;
+            var filename = $('#file-name').val(),
+                    alias = (!$('#file-alias').val().length) ? filename: $('#file-alias').val(),
+                    filehash = md5(filename),
+                    htmlText = '<a href="{%%HTML_LINK_PATH%%}/?' + filehash + '/' + alias + '">Download ' + alias + '</a>';
+            $('#file-hash').val(filehash);
+            $('#html-text').val(htmlText);
+        });
+    });
+</script>
+<!-- /javascript -->
+</body>
+</html>
+DASHBOARD;
+
+    const DASHBOARD_ITEM_ACTIVE = '<span class="label label-success">Active</span>';
+
+    const DASHBOARD_ITEM_INACTIVE = '<span class="label label-warning">Inactive</span>';
 
     /**
      * URL Query String
@@ -107,7 +311,7 @@ class Base {
             self::$referrer = "http" . (($_SERVER["HTTPS"] == 'on') ? "s://" : "://") . $_SERVER['HTTP_HOST'] . $_SERVER['REQUEST_URI'];
         }
 
-        if (Configuration::PANEL_ON && self::$uri == Configuration::PANEL_TOKEN) {
+        if (Configuration::DASHBOARD_ON && self::$uri == Configuration::DASHBOARD_TOKEN) {
             self::Panel();
             exit;
         }
@@ -255,15 +459,15 @@ class Base {
      * Load Web Panel to manage download lot
      */
     private static function Panel() {
-        if (Configuration::PANEL_USERNAME != $_SERVER['PHP_AUTH_USER'] || Configuration::PANEL_PASSWORD != $_SERVER['PHP_AUTH_PW']) {
-            header('WWW-Authenticate: Basic realm="Getter Control Panel"');
+        if (Configuration::DASHBOARD_USERNAME != $_SERVER['PHP_AUTH_USER'] || Configuration::DASHBOARD_PASSWORD != $_SERVER['PHP_AUTH_PW']) {
+            header('WWW-Authenticate: Basic realm="Getter Dashboard"');
             header('HTTP/1.0 401 Unauthorized');
             echo "<h1>HTTP/1.0 401 Unauthorized</h1><p>You did not successfully verify your login credentials.</p>";
             exit;
         }
 
         // Export Log
-        if (isset($_POST['ExportLog'])) {
+        if (isset($_POST['DownloadLog'])) {
             header('Pragma: public');
             header('Expires: 0');
             header('Cache-Control: must-revalidate, post-check=0, pre-check=0');
@@ -276,94 +480,65 @@ class Base {
             exit;
         }
 
+        // Clear Log
         if (isset($_POST['ClearLog'])) {
             unlink(Configuration::LOG_FILENAME);
         }
 
-        $html = <<< HTML
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="utf-8">
-    <title>Getter Control Panel</title>
-    <script type="text/javascript">
-        sorttable={init:function(){if(arguments.callee.done){return}arguments.callee.done=true;if(_timer){clearInterval(_timer)}if(!document.createElement||!document.getElementsByTagName){return}sorttable.DATE_RE=/^(\d\d?)[\/\.-](\d\d?)[\/\.-]((\d\d)?\d\d)$/;forEach(document.getElementsByTagName("table"),function(a){if(a.className.search(/\bsortable\b/)!=-1){sorttable.makeSortable(a)}})},makeSortable:function(b){if(b.getElementsByTagName("thead").length==0){the=document.createElement("thead");the.appendChild(b.rows[0]);b.insertBefore(the,b.firstChild)}if(b.tHead==null){b.tHead=b.getElementsByTagName("thead")[0]}if(b.tHead.rows.length!=1){return}sortbottomrows=[];for(var a=0;a<b.rows.length;a++){if(b.rows[a].className.search(/\bsortbottom\b/)!=-1){sortbottomrows[sortbottomrows.length]=b.rows[a]}}if(sortbottomrows){if(b.tFoot==null){tfo=document.createElement("tfoot");b.appendChild(tfo)}for(var a=0;a<sortbottomrows.length;a++){tfo.appendChild(sortbottomrows[a])}delete sortbottomrows}headrow=b.tHead.rows[0].cells;for(var a=0;a<headrow.length;a++){if(!headrow[a].className.match(/\bsorttable_nosort\b/)){mtch=headrow[a].className.match(/\bsorttable_([a-z0-9]+)\b/);if(mtch){override=mtch[1]}if(mtch&&typeof sorttable["sort_"+override]=="function"){headrow[a].sorttable_sortfunction=sorttable["sort_"+override]}else{headrow[a].sorttable_sortfunction=sorttable.guessType(b,a)}headrow[a].sorttable_columnindex=a;headrow[a].sorttable_tbody=b.tBodies[0];dean_addEvent(headrow[a],"click",sorttable.innerSortFunction=function(f){if(this.className.search(/\bsorttable_sorted\b/)!=-1){sorttable.reverse(this.sorttable_tbody);this.className=this.className.replace("sorttable_sorted","sorttable_sorted_reverse");this.removeChild(document.getElementById("sorttable_sortfwdind"));sortrevind=document.createElement("span");sortrevind.id="sorttable_sortrevind";sortrevind.innerHTML="&nbsp;&#x25B4;";this.appendChild(sortrevind);return}if(this.className.search(/\bsorttable_sorted_reverse\b/)!=-1){sorttable.reverse(this.sorttable_tbody);this.className=this.className.replace("sorttable_sorted_reverse","sorttable_sorted");this.removeChild(document.getElementById("sorttable_sortrevind"));sortfwdind=document.createElement("span");sortfwdind.id="sorttable_sortfwdind";sortfwdind.innerHTML="&nbsp;&#x25BE;";this.appendChild(sortfwdind);return}theadrow=this.parentNode;forEach(theadrow.childNodes,function(e){if(e.nodeType==1){e.className=e.className.replace("sorttable_sorted_reverse","");e.className=e.className.replace("sorttable_sorted","")}});sortfwdind=document.getElementById("sorttable_sortfwdind");if(sortfwdind){sortfwdind.parentNode.removeChild(sortfwdind)}sortrevind=document.getElementById("sorttable_sortrevind");if(sortrevind){sortrevind.parentNode.removeChild(sortrevind)}this.className+=" sorttable_sorted";sortfwdind=document.createElement("span");sortfwdind.id="sorttable_sortfwdind";sortfwdind.innerHTML="&nbsp;&#x25BE;";this.appendChild(sortfwdind);row_array=[];col=this.sorttable_columnindex;rows=this.sorttable_tbody.rows;for(var c=0;c<rows.length;c++){row_array[row_array.length]=[sorttable.getInnerText(rows[c].cells[col]),rows[c]]}row_array.sort(this.sorttable_sortfunction);tb=this.sorttable_tbody;for(var c=0;c<row_array.length;c++){tb.appendChild(row_array[c][1])}delete row_array})}}},guessType:function(c,b){sortfn=sorttable.sort_alpha;for(var a=0;a<c.tBodies[0].rows.length;a++){text=sorttable.getInnerText(c.tBodies[0].rows[a].cells[b]);if(text!=""){if(text.match(/^-?[£$¤]?[\d,.]+%?$/)){return sorttable.sort_numeric}possdate=text.match(sorttable.DATE_RE);if(possdate){first=parseInt(possdate[1]);second=parseInt(possdate[2]);if(first>12){return sorttable.sort_ddmm}else{if(second>12){return sorttable.sort_mmdd}else{sortfn=sorttable.sort_ddmm}}}}}return sortfn},getInnerText:function(b){if(!b){return""}hasInputs=(typeof b.getElementsByTagName=="function")&&b.getElementsByTagName("input").length;if(b.getAttribute("sorttable_customkey")!=null){return b.getAttribute("sorttable_customkey")}else{if(typeof b.textContent!="undefined"&&!hasInputs){return b.textContent.replace(/^\s+|\s+$/g,"")}else{if(typeof b.innerText!="undefined"&&!hasInputs){return b.innerText.replace(/^\s+|\s+$/g,"")}else{if(typeof b.text!="undefined"&&!hasInputs){return b.text.replace(/^\s+|\s+$/g,"")}else{switch(b.nodeType){case 3:if(b.nodeName.toLowerCase()=="input"){return b.value.replace(/^\s+|\s+$/g,"")}case 4:return b.nodeValue.replace(/^\s+|\s+$/g,"");break;case 1:case 11:var c="";for(var a=0;a<b.childNodes.length;a++){c+=sorttable.getInnerText(b.childNodes[a])}return c.replace(/^\s+|\s+$/g,"");break;default:return""}}}}}},reverse:function(a){newrows=[];for(var b=0;b<a.rows.length;b++){newrows[newrows.length]=a.rows[b]}for(var b=newrows.length-1;b>=0;b--){a.appendChild(newrows[b])}delete newrows},sort_numeric:function(e,c){aa=parseFloat(e[0].replace(/[^0-9.-]/g,""));if(isNaN(aa)){aa=0}bb=parseFloat(c[0].replace(/[^0-9.-]/g,""));if(isNaN(bb)){bb=0}return aa-bb},sort_alpha:function(e,c){if(e[0]==c[0]){return 0}if(e[0]<c[0]){return -1}return 1},sort_ddmm:function(e,c){mtch=e[0].match(sorttable.DATE_RE);y=mtch[3];m=mtch[2];d=mtch[1];if(m.length==1){m="0"+m}if(d.length==1){d="0"+d}dt1=y+m+d;mtch=c[0].match(sorttable.DATE_RE);y=mtch[3];m=mtch[2];d=mtch[1];if(m.length==1){m="0"+m}if(d.length==1){d="0"+d}dt2=y+m+d;if(dt1==dt2){return 0}if(dt1<dt2){return -1}return 1},sort_mmdd:function(e,c){mtch=e[0].match(sorttable.DATE_RE);y=mtch[3];d=mtch[2];m=mtch[1];if(m.length==1){m="0"+m}if(d.length==1){d="0"+d}dt1=y+m+d;mtch=c[0].match(sorttable.DATE_RE);y=mtch[3];d=mtch[2];m=mtch[1];if(m.length==1){m="0"+m}if(d.length==1){d="0"+d}dt2=y+m+d;if(dt1==dt2){return 0}if(dt1<dt2){return -1}return 1},shaker_sort:function(h,f){var a=0;var e=h.length-1;var j=true;while(j){j=false;for(var c=a;c<e;++c){if(f(h[c],h[c+1])>0){var g=h[c];h[c]=h[c+1];h[c+1]=g;j=true}}e--;if(!j){break}for(var c=e;c>a;--c){if(f(h[c],h[c-1])<0){var g=h[c];h[c]=h[c-1];h[c-1]=g;j=true}}a++}}};if(document.addEventListener){document.addEventListener("DOMContentLoaded",sorttable.init,false)}if(/WebKit/i.test(navigator.userAgent)){var _timer=setInterval(function(){if(/loaded|complete/.test(document.readyState)){sorttable.init()}},10)}window.onload=sorttable.init;function dean_addEvent(b,e,c){if(b.addEventListener){b.addEventListener(e,c,false)}else{if(!c.$$guid){c.$$guid=dean_addEvent.guid++}if(!b.events){b.events={}}var a=b.events[e];if(!a){a=b.events[e]={};if(b["on"+e]){a[0]=b["on"+e]}}a[c.$$guid]=c;b["on"+e]=handleEvent}}dean_addEvent.guid=1;function removeEvent(a,c,b){if(a.removeEventListener){a.removeEventListener(c,b,false)}else{if(a.events&&a.events[c]){delete a.events[c][b.$$guid]}}}function handleEvent(e){var c=true;e=e||fixEvent(((this.ownerDocument||this.document||this).parentWindow||window).event);var a=this.events[e.type];for(var b in a){this.$$handleEvent=a[b];if(this.$$handleEvent(e)===false){c=false}}return c}function fixEvent(a){a.preventDefault=fixEvent.preventDefault;a.stopPropagation=fixEvent.stopPropagation;return a}fixEvent.preventDefault=function(){this.returnValue=false};fixEvent.stopPropagation=function(){this.cancelBubble=true};if(!Array.forEach){Array.forEach=function(e,c,b){for(var a=0;a<e.length;a++){c.call(b,e[a],a,e)}}}Function.prototype.forEach=function(a,e,c){for(var b in a){if(typeof this.prototype[b]=="undefined"){e.call(c,a[b],b,a)}}};String.forEach=function(a,c,b){Array.forEach(a.split(""),function(f,e){c.call(b,f,e,a)})};var forEach=function(a,e,b){if(a){var c=Object;if(a instanceof Function){c=Function}else{if(a.forEach instanceof Function){a.forEach(e,b);return}else{if(typeof a=="string"){c=String}else{if(typeof a.length=="number"){c=Array}}}}c.forEach(a,e,b)}};
-    </script>
-HTML;
+        // Set variables used in the Dashboard Template
+        $variables = array(
+            '{%%VERSION%%}' => self::VERSION,
+            '{%%BASE_DIR%%}' => Configuration::BASE_DIRECTORY,
+            '{%%BASE_DIR_RESOLVED%%}' => 'Cannot resolve base directory',
+            '{%%BASE_DIR_WARNING%%}' => 'block',
+            '{%%TABLE_DATA%%}' => '',
+            '{%%LOG_COUNT%%}' => 0,
+            '{%%LOG_ORIG_DATE%%}' => (new \DateTime())->format(\DateTime::RFC822),
+            '{%%LOG_READ_LIMIT%%}' => Configuration::DASHBOARD_ITEMS_MAX_NUM
+        );
 
-        $formattedHtml = <<< HTML
-    <style>
-%s
-    </style>
-</head>
-<body>
-    <h1>Getter Control Panel</h1>
-    <form action="%s" method="post">
-        <p>
-            Download Path: <strong title="The download path should not contain a trailing slash">%s</strong><br />
-            Hotlink Protection: <strong>%s</strong><br />
-            Log Downloads: <strong>%s</strong><br />
+        $variables['{%%LOG_ACTIVE%%}'] = Configuration::LOG_DOWNLOADS
+            ? self::DASHBOARD_ITEM_ACTIVE
+            : self::DASHBOARD_ITEM_INACTIVE;
 
-            <label for="filename">Encryption Tool: </label><input type="text" name="filename" id="filename" placeholder="Type in filename to encrypt (ex. \'docs.txt\')" /><input type="submit" name="EncryptName" value="Generate Hash"/>
-HTML;
+        $variables['{%%HOTLINK_ACTIVE%%}'] = Configuration::HOTLINK_PROTECTION
+            ? self::DASHBOARD_ITEM_ACTIVE
+            : self::DASHBOARD_ITEM_INACTIVE;
 
-        if (isset($_POST['EncryptName'])) $formattedHtml .= '<br />MD5 Hash for <strong>&quot;' . $_POST['filename'] . '&quot;</strong>: <input type="text" name="filehash" id="filehash" value="' . md5($_POST['filename']) . '" readonly="readonly" />';
+        $variables['{%%HOTLINK_BEHAVIOR%%}'] = (empty(Configuration::HOTLINK_REDIRECT_URL))
+            ? '<span class="label label-info">403 Error</span>'
+            : '<span class="label label-info">Redirect</span> <a href="' . Configuration::HOTLINK_REDIRECT_URL . '" target="_blank">' . Configuration::HOTLINK_REDIRECT_URL . '</a>';
 
+        $variables['{%%HOTLINK_NULL_PERMIT%%}'] = Configuration::HOTLINK_PROTECTION_ALLOW_NULL
+            ? self::DASHBOARD_ITEM_ACTIVE
+            : self::DASHBOARD_ITEM_INACTIVE;
+
+        // Parse logger file if present
+        $tableData = '';
         if (is_file(Configuration::LOG_FILENAME)) {
             $data = self::ParseCsv(Configuration::LOG_FILENAME);
-            $date = $data[0][0];
-            $count = count($data);
-            $table = <<< LOGTABLE
-            <br />
-            Manage Download Log: <input type="submit" name="ExportLog" value="Export Log" /> <input type="submit" name="ClearLog" value="Clear Log" />
-        </p>
-    </form>
+            $variables['{%%LOG_ORIG_DATE%%}'] = (new \DateTime($data[0][0]))->format(\DateTime::RFC822);
+            $variables['{%%LOG_COUNT%%}'] = count($data);
 
-    <hr />
-    <h2>Log</h2>
-    <p>
-        First Logged Download: <strong>%s</strong><br />
-        Total Downloads: <strong>%s</strong>
-    </p>
-    <table class="sortable">
-        <thead>
-            <tr>
-                <th>ID</th>
-                <th>Timestamp</th>
-                <th>IP Address</th>
-                <th>Referrer</th>
-                <th>File</th>
-            </tr>
-        </thead>
-        <tbody>
-LOGTABLE;
-
-            $formattedHtml .= sprintf($table, $date, $count);
-
-            for($i = ($count - 1); $i >= 0; $i--) {
-                $formattedHtml .= sprintf("\n\t\t\t<tr>\n\t\t\t\t<td>%s</td>\n\t\t\t\t<td>%s</td>\n\t\t\t\t<td>%s</td>\n\t\t\t\t<td>%s</td>\n\t\t\t\t<td>%s</td>\n\t\t\t</tr>",
-                    ($i + 1),       // ID
-                    $data[$i][0],   // Timestamp
+            for($i = ($variables['{%%LOG_COUNT%%}'] - 1); $i >= 0; $i--) {
+                $tableData .= sprintf("\n<tr><td>%s</td><td>%s</td><td>%s</td><td>%s</td></tr>",
                     $data[$i][1],   // IP
-                    '<a href="' . $data[$i][2] . '">' . $data[$i][2] . '</a>',   // HTTP Referer
-                    $data[$i][3]    // File Downloaded
+                    $data[$i][2],   // Referer
+                    $data[$i][0],   // Timestamp
+                    $data[$i][3]    // File
                 );
             }
-            $formattedHtml .= "\n\t\t</tbody>\n\t</table>";
-        }
-        else {
-            $formattedHtml .= '</p></form>';
+
+            $variables['{%%TABLE_DATA%%}'] = $tableData;
         }
 
-        $formattedHtml .= "\n\t<p id=\"footer\">&copy; 2014 <a href=\"http://gowondesigns.com\" target=\"_blank\">Gowon Designs</a></p>\n</body>\n</html>";
+        $path = realpath(Configuration::BASE_DIRECTORY);
+        if ($path !== false){
+            $variables['{%%BASE_DIR_RESOLVED%%}'] = $path;
+            $variables['{%%BASE_DIR_WARNING%%}'] = 'none';
+        }
 
-        echo $html . sprintf($formattedHtml,
-                Configuration::PANEL_CSS,
-                '?' . Configuration::PANEL_TOKEN,
-                realpath(Configuration::BASE_DIRECTORY ),
-                (Configuration::HOTLINK_PROTECTION ? 'ENABLED': 'DISABLED'),
-                (Configuration::LOG_DOWNLOADS ? 'ENABLED': 'DISABLED')
-            );
+        echo str_replace(array_keys($variables), $variables, self::DASHBOARD_HTML);
     }
 
     private static function GetFilePath ($directory, $fileName, &$filePath) {
@@ -405,4 +580,3 @@ LOGTABLE;
 }
 
 Base::Start();
-?>
