@@ -1,18 +1,18 @@
 <?php
 /**
  * Getter - Single file PHP download manager.
- * Version: 1.1.0
- * Last Updated: Mar 14, 2015
+ * Version: 1.1.1
+ * Last Updated: Apr 11, 2015
  * Copyright: 2015 Gowon Designs Ltd. Co.
  * License: GNU General Public License v3 <http://www.gnu.org/licenses/gpl-3.0.html>
- * @package Getter
+ * @package GowonDesigns\Getter
  */
-namespace Getter;
+namespace GowonDesigns\Getter;
 
 /**
  * Configuration
  * Class containing all of the editable parameters of the Getter program
- * @package Getter\Configuration
+ * @package GowonDesigns\Getter\Configuration
  */
 class Configuration {
     const BASE_DIRECTORY = '/www/user/downloads'; // Do not include trailing slash
@@ -57,7 +57,7 @@ class Configuration {
 /**
  * Base
  * Main class containing Getter URI logic and methods
- * @package Getter\Base
+ * @package GowonDesigns\Getter\Base
  */
 class Base {
 
@@ -106,7 +106,10 @@ class Base {
     </nav>
 
     <div class="alert alert-danger" role="alert" style="display: {%%BASE_DIR_WARNING%%}">
-        <strong>Warning!</strong> The base directory path "<strong>{%%BASE_DIR%%}</strong>" could not be resolved. Getter will not be able to manage your files until this is resolved. Please update your file's configuration to fix this problem.
+        <strong>Warning!</strong> The base directory path "<strong>{%%BASE_DIR%%}</strong>" could not be resolved.
+        Getter will not be able to manage your files until this is fixed.
+        Please update your file's configuration to fix this problem and reload the dashboard.
+        <button type="button" class="btn btn-danger" onclick="window.location.reload();">Reload</button>
     </div>
 
     <div role="tabpanel">
@@ -168,7 +171,7 @@ class Base {
                                 <p>There have been <strong>{%%LOG_COUNT%%}</strong> downloads since <strong>{%%LOG_ORIG_DATE%%}</strong>.</p>
                                 <form method="post">
                                     <p>
-                                        <a href="" class="btn btn-default"><i class="fa fa-refresh"></i> Reload</a>
+                                        <button type="button" class="btn btn-default" onclick="window.location.reload();"><i class="fa fa-refresh"></i> Reload</button>
                                         <button type="submit" name="DownloadLog" class="btn btn-primary"><i class="fa fa-download"></i> Download</button>
                                         <button type="button" class="btn btn-danger" data-toggle="modal" data-target="#clearLogModal"><i class="fa fa-trash"></i> Clear</button>
                                     </p>
@@ -415,7 +418,9 @@ DASHBOARD;
             {
                 //multiple ranges could be specified at the same time, but for simplicity only serve the first range
                 //http://tools.ietf.org/id/draft-ietf-http-range-retrieval-00.txt
-                list($range, $extra_ranges) = explode(',', $range_orig, 2);
+                //list($range, $extra_ranges) = explode(',', $range_orig, 2);
+                $ranges = explode(',', $range_orig);
+                $range = $ranges[0];
             }
             else {
                 header('HTTP/1.1 416 Requested Range Not Satisfiable');
@@ -506,7 +511,7 @@ DASHBOARD;
             ? self::DASHBOARD_ITEM_ACTIVE
             : self::DASHBOARD_ITEM_INACTIVE;
 
-        $variables['{%%HOTLINK_BEHAVIOR%%}'] = (empty(Configuration::HOTLINK_REDIRECT_URL))
+        $variables['{%%HOTLINK_BEHAVIOR%%}'] = (!Configuration::HOTLINK_REDIRECT_URL) // GETTER-1: Fatal error: Can't use function return value in write context. PHP <5.5 compatibility
             ? '<span class="label label-info">403 Error</span>'
             : '<span class="label label-info">Redirect</span> <a href="' . Configuration::HOTLINK_REDIRECT_URL . '" target="_blank">' . Configuration::HOTLINK_REDIRECT_URL . '</a>';
 
@@ -571,7 +576,8 @@ DASHBOARD;
                 $line = str_replace("\r\n", '', $line);
                 $cols = explode($delimiter, $line);
                 // ignore empty rows
-                if (!empty(implode($cols))) $data[] = $cols;
+                $flattened = implode($cols); // GETTER-1: Fatal error: Can't use function return value in write context. PHP <5.5 compatibility
+                if (!empty($flattened)) $data[] = $cols;
             }
             fclose($f);
             return $data;
