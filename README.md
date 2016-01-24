@@ -65,7 +65,7 @@ Copyright &copy; 2007-2015 Gowon Designs Ltd. Co.
 
 This program is distributed under the terms of the [GNU General Public License Version 3][license].
 
-[a1]: https://github.com/gowondesigns/getter/zipball/master
+[a1]: https://github.com/gowondesigns/getter/releases/latest
 [b1]: http://en.wikipedia.org/wiki/Depth-first_search
 [b2]: http://en.wikipedia.org/wiki/MD5
 [license]: http://www.gnu.org/licenses/gpl-3.0.html
